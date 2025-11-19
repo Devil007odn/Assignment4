@@ -36,15 +36,15 @@ class PostDAOPickle(PostDAO):
         Updates the counter to maintain proper post code sequencing.
         '''
         try:
-            file_path = self.get_record_file_path()
-            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
-                with open(file_path, 'rb') as f:
-                    loaded_posts = pickle.load(f)
-                    if loaded_posts is not None:  # Ensure we don't get None
-                        self.posts = loaded_posts
+            pickle_file_path = self.get_record_file_path()
+            if os.path.exists(pickle_file_path) and os.path.getsize(pickle_file_path) > 0:
+                with open(pickle_file_path, 'rb') as pickle_file:
+                    posts_list = pickle.load(pickle_file)
+                    if posts_list is not None:  # Ensure we don't get None
+                        self.posts = posts_list
                         # Update counter to ensure new posts get proper codes
                         if self.posts:
-                            self.counter = max(post.code for post in self.posts)
+                            self.counter = max(post.post_code for post in self.posts)
         except (FileNotFoundError, pickle.PickleError, EOFError, AttributeError):
             # Handle corrupted or missing files by starting fresh
             self.posts = []
@@ -56,47 +56,47 @@ class PostDAOPickle(PostDAO):
         if self.autosave:
             try:
                 os.makedirs(Configuration.records_path, exist_ok=True)
-                file_path = self.get_record_file_path()
-                with open(file_path, 'wb') as f:
-                    pickle.dump(self.posts, f)
+                pickle_file_path = self.get_record_file_path()
+                with open(pickle_file_path, 'wb') as pickle_file:
+                    pickle.dump(self.posts, pickle_file)
             except Exception as e:
                 print(f"Error saving posts: {e}")
 
-    def search_post(self, key):
-        ''' search a post by key '''
+    def search_post(self, post_code):
+        ''' search a post by post_code '''
         for post in self.posts:
-            if post.code == key:
+            if post.post_code == post_code:
                 return post
         return None
 
     def create_post(self, post):
         ''' create a new post '''
         self.posts.append(post)
-        self.counter = max(self.counter, post.code)
+        self.counter = max(self.counter, post.post_code)
         self.save_posts()
         return True
 
-    def retrieve_posts(self, search_string):
-        ''' retrieve posts that match search string '''
-        result = []
+    def retrieve_posts(self, search_term):
+        ''' retrieve posts that match search_term '''
+        matching_posts = []
         for post in self.posts:
-            if search_string in post.title or search_string in post.text:
-                result.append(post)
-        return result
+            if search_term in post.post_title or search_term in post.post_text:
+                matching_posts.append(post)
+        return matching_posts
 
-    def update_post(self, key, new_title, new_text):
+    def update_post(self, post_code, new_post_title, new_post_text):
         ''' update an existing post '''
-        post = self.search_post(key)
+        post = self.search_post(post_code)
         if not post:
             return False
-        post.update(new_title, new_text)
+        post.update(new_post_title, new_post_text)
         self.save_posts()
         return True
 
-    def delete_post(self, key):
+    def delete_post(self, post_code):
         ''' delete a post '''
         for i, post in enumerate(self.posts):
-            if post.code == key:
+            if post.post_code == post_code:
                 del self.posts[i]
                 self.save_posts()
                 return True

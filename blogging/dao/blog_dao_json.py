@@ -29,25 +29,26 @@ class BlogDAOJSON(BlogDAO):
         ''' Load blogs from JSON file. Handles file not found and decode errors. '''
         if self.autosave and os.path.exists(Configuration.blogs_file):
             try:
-                with open(Configuration.blogs_file, 'r') as file:
-                    blogs_data = json.load(file)
-                    for blog_data in blogs_data:
+                with open(Configuration.blogs_file, 'r') as json_file:
+                    blogs_list = json.load(json_file)
+                    for blog_dict in blogs_list:
                         blog = Blog(
-                            blog_data['id'],
-                            blog_data['name'], 
-                            blog_data['url'],
-                            blog_data['email']
+                            blog_dict['id'],
+                            blog_dict['name'], 
+                            blog_dict['url'],
+                            blog_dict['email']
                         )
                         self.blogs[blog.id] = blog
             except (FileNotFoundError, json.JSONDecodeError):
                 # If file doesn't exist or is invalid, start with empty blogs
                 self.blogs = {}
+
     def save_blogs(self):
         ''' Save blogs to JSON file if autosave is enabled '''
         if self.autosave:
-            blogs_data = []
+            blogs_list = []
             for blog in self.blogs.values():
-                blogs_data.append({
+                blogs_list.append({
                     'id': blog.id,
                     'name': blog.name,
                     'url': blog.url,
@@ -57,12 +58,12 @@ class BlogDAOJSON(BlogDAO):
             # Ensure directory exists
             os.makedirs(os.path.dirname(Configuration.blogs_file), exist_ok=True)
             
-            with open(Configuration.blogs_file, 'w') as file:
-                json.dump(blogs_data, file, indent=2)
+            with open(Configuration.blogs_file, 'w') as json_file:
+                json.dump(blogs_list, json_file, indent=2)
 
-    def search_blog(self, key):
-        ''' search a blog by key '''
-        return self.blogs.get(key)
+    def search_blog(self, blog_id):
+        ''' search a blog by blog_id '''
+        return self.blogs.get(blog_id)
 
     def create_blog(self, blog):
         ''' create a new blog '''
@@ -72,27 +73,27 @@ class BlogDAOJSON(BlogDAO):
         self.save_blogs()
         return True
 
-    def retrieve_blogs(self, search_string):
-        ''' retrieve blogs that match search string '''
-        result = []
+    def retrieve_blogs(self, search_term):
+        ''' retrieve blogs that match search_term '''
+        matching_blogs = []
         for blog in self.blogs.values():
-            if search_string in blog.name:
-                result.append(blog)
-        return result
+            if search_term in blog.name:
+                matching_blogs.append(blog)
+        return matching_blogs
 
-    def update_blog(self, key, blog):
+    def update_blog(self, blog_id, blog):
         ''' update an existing blog '''
-        if key not in self.blogs:
+        if blog_id not in self.blogs:
             return False
-        self.blogs[key] = blog
+        self.blogs[blog_id] = blog
         self.save_blogs()
         return True
 
-    def delete_blog(self, key):
+    def delete_blog(self, blog_id):
         ''' delete a blog '''
-        if key not in self.blogs:
+        if blog_id not in self.blogs:
             return False
-        del self.blogs[key]
+        del self.blogs[blog_id]
         self.save_blogs()
         return True
 
