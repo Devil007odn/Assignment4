@@ -17,44 +17,36 @@ class Controller():
     def __init__(self, autosave=False):
         ''' construct a controller class '''
         self.autosave = autosave or Configuration.autosave
-        
         self.users = {}
-        
-        # Load users from file if autosave is enabled
-        if self.autosave:
-            self.load_users()
-        else:
-            # Fallback to hardcoded users for testing
-            self.users = {
-                "user": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-                "ali": "6394ffec21517605c1b426d43e6fa7eb0cff606ded9c2956821c2c36bfee2810",
-                "kala": "e5268ad137eec951a48a5e5da52558c7727aaa537c8b308b5e403e6b434e036e"
-            }
-
+        self.load_users()
         self.username = None
         self.password_hash = None
         self.logged = False
-
-        # Use BlogDAOJSON instead of direct dictionary
+        
         self.blog_dao = BlogDAOJSON()
         self.current_blog = None
+
+
 
     def load_users(self):
         ''' Load users from users.txt file '''
         try:
-            with open(Configuration.users_file, 'r') as user_file:
-                for line in user_file:
+            with open(Configuration.users_file, 'r') as file:
+                for line in file:
                     line = line.strip()
-                    if line and ',' in line:
-                        username, password_hash = line.split(',', 1)
+                    if line:  # Skip empty lines
+                        username, password_hash = line.split(',')
                         self.users[username] = password_hash
         except FileNotFoundError:
-            # If file doesn't exist, use hardcoded as fallback
-            self.users = {
-                "user": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
-                "ali": "6394ffec21517605c1b426d43e6fa7eb0cff606ded9c2956821c2c36bfee2810",
-                "kala": "e5268ad137eec951a48a5e5da52558c7727aaa537c8b308b5e403e6b434e036e"
-            }
+            # If file doesn't exist, start with empty users
+            self.users = {}
+
+
+    def password_hash(self, password):
+        encoded_password = password.encode('utf-8')     
+        hash_object = hashlib.sha256(encoded_password)      
+        hex_dig = hash_object.hexdigest()       
+        return hex_dig
 
     def login(self, username, password):
         ''' user logs in the system '''
