@@ -2,9 +2,20 @@ import json
 from blogging.blog import Blog
 
 class BlogEncoder(json.JSONEncoder):
-    ''' Custom JSON encoder for Blog objects '''
+    ''' Custom JSON encoder for Blog objects.
+    Converts Blog instances to serializable dictionaries for JSON storage.
+    Handles the special serialization requirements for Blog objects. '''
     
     def default(self, blog_obj):
+        '''
+        Override default JSON encoding to handle Blog objects.
+        
+        Args:
+            blog_obj: Object to be encoded - if it's a Blog, convert to dict
+            
+        Returns:
+            Dictionary representation for Blog objects, otherwise uses default encoding
+        '''
         if isinstance(blog_obj, Blog):
             # Create a serializable representation without the post_dao
             return {
@@ -13,6 +24,6 @@ class BlogEncoder(json.JSONEncoder):
                 'name': blog_obj.name,
                 'url': blog_obj.url,
                 'email': blog_obj.email
-                # Note: We don't serialize posts here, they're handled separately
+                # We don't serialize posts here, they're handled separately
             }
         return super().default(blog_obj)
