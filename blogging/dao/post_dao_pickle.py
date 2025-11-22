@@ -14,9 +14,6 @@ class PostDAOPickle(PostDAO):
     def __init__(self, blog):
         '''
         Initialize the PostDAOPickle for a specific blog.
-        
-        Args:
-            blog: The blog object that owns these posts
         '''
         self.autosave = Configuration.autosave
         self.blog = blog

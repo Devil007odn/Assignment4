@@ -14,12 +14,6 @@ class BlogDecoder(json.JSONDecoder):
 
         '''
         Convert dictionary back to Blog object during JSON parsing.
-        
-        Args:
-            data_dict: Dictionary parsed from JSON that may represent a Blog
-            
-        Returns:
-            Blog object if dictionary contains Blog marker, otherwise original dictionary
         '''
 
         if '__type__' in data_dict and data_dict['__type__'] == 'Blog':

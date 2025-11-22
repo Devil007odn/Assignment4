@@ -9,12 +9,6 @@ class BlogEncoder(json.JSONEncoder):
     def default(self, blog_obj):
         '''
         Override default JSON encoding to handle Blog objects.
-        
-        Args:
-            blog_obj: Object to be encoded - if it's a Blog, convert to dict
-            
-        Returns:
-            Dictionary representation for Blog objects, otherwise uses default encoding
         '''
         if isinstance(blog_obj, Blog):
             # Create a serializable representation without the post_dao
