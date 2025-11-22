@@ -12,10 +12,13 @@ from blogging.exception.illegal_operation_exception import IllegalOperationExcep
 from blogging.exception.no_current_blog_exception import NoCurrentBlogException
 
 class Controller():
-    ''' controller class that receives the system's operations '''
+    ''' Main controller class that handles all system operations for the blogging system
+    Manages users aunthentication, blog operation, and  post operation
+    Delegates persistence to DAO classes for separation of concerns.
+    '''
 
     def __init__(self, autosave=False):
-        ''' construct a controller class '''
+        ''' Initializes the controller with the default state and persistence configuration. '''
         self.autosave = autosave or Configuration.autosave
         self.users = {}
         self.load_users()
@@ -29,7 +32,9 @@ class Controller():
 
 
     def load_users(self):
-        ''' Load users from users.txt file '''
+        ''' Loads user credentials from users.txt file into memory.
+        Handles FileNotFoundError by starting with empty user dictionary.
+        Only loads users if autosave is enabled. '''
         try:
             with open(Configuration.users_file, 'r') as file:
                 for line in file:
@@ -43,13 +48,16 @@ class Controller():
 
 
     def password_hash(self, password):
+        '''generates SHA-256 hash for a given password for secure storage.'''
         encoded_password = password.encode('utf-8')     
         hash_object = hashlib.sha256(encoded_password)      
         hex_dig = hash_object.hexdigest()       
         return hex_dig
 
     def login(self, username, password):
-        ''' user logs in the system '''
+        ''' Authenticates user with username and password.
+        User must not be already logged in and credentials must match stored values.
+        '''
         if self.logged:
             raise DuplicateLoginException("User already logged in")
         
@@ -67,7 +75,9 @@ class Controller():
         return True
 
     def logout(self):
-        ''' user logs out from the system '''
+        ''' Logs out the currently authenticated user.
+        Clears all user-specific data including current blog selection.
+        '''
         if not self.logged:
             raise InvalidLogoutException("No user is currently logged in")
             
@@ -78,14 +88,18 @@ class Controller():
         return True
 
     def search_blog(self, blog_id):
-        ''' user searches a blog '''
+        ''' Searches for a blog by its unique identifier.
+        User must be logged in to perform this operation.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to search blogs")
             
         return self.blog_dao.search_blog(blog_id)
 
     def create_blog(self, blog_id, blog_name, blog_url, blog_email):
-        ''' user creates a blog '''
+        '''Creates a new blog with the specified attributes.
+        Blog ID must be unique across the system.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to create blogs")
         
@@ -96,14 +110,18 @@ class Controller():
         return blog
 
     def retrieve_blogs(self, search_term):
-        ''' user retrieves the blogs that satisfy a search_term '''
+        ''' Retrieves all blogs whose names contain the search term.
+        User must be logged in to perform this operation. '''
+
         if not self.logged:
             raise IllegalAccessException("User must be logged in to retrieve blogs")
             
         return self.blog_dao.retrieve_blogs(search_term)
 
     def update_blog(self, original_blog_id, blog_id, blog_name, blog_url, blog_email):
-        ''' user updates a blog '''
+        ''' Updates an existing blog's attributes, optionally changing its ID.
+        Cannot update the currently selected blog.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to update blogs")
         
@@ -132,7 +150,9 @@ class Controller():
         return True
             
     def delete_blog(self, blog_id):
-        ''' user deletes a blog '''
+        ''' Deletes a blog by its ID.
+        Cannot delete the currently selected blog.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to delete blogs")
             
@@ -146,14 +166,18 @@ class Controller():
         return self.blog_dao.delete_blog(blog_id)
 
     def list_blogs(self):
-        ''' user lists all blogs '''
+        ''' Retrieves all blogs in the system.
+        User must be logged in to perform this operation.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to list blogs")
             
         return self.blog_dao.list_blogs()
 
     def set_current_blog(self, blog_id):
-        ''' user sets the current blog '''
+        ''' Sets the specified blog as the current working blog.
+        User must be logged in and blog must exist.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to set current blog")
             
@@ -165,14 +189,17 @@ class Controller():
         return True
 
     def get_current_blog(self):
-        ''' get the current blog '''
+        '''Retrieves the currently selected blog.
+        User must be logged in to perform this operation.'''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to get current blog")
             
         return self.current_blog
 
     def unset_current_blog(self):
-        ''' unset the current blog '''
+        ''' Clears the current blog selection.
+        User must be logged in to perform this operation.
+        '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to unset current blog")
             
@@ -180,7 +207,8 @@ class Controller():
         return True
 
     def search_post(self, post_code):
-        ''' user searches a post from the current blog '''
+        ''' Searches for a post in the current blog by post code.
+        User must be logged in and have a blog selected.'''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to search posts")
             
@@ -190,7 +218,8 @@ class Controller():
         return self.current_blog.search_post(post_code)
 
     def create_post(self, post_title, post_text):
-        ''' user creates a post in the current blog '''
+        ''' Creates a new post in the current blog.
+        User must be logged in and have a blog selected. '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to create posts")
             
@@ -200,7 +229,8 @@ class Controller():
         return self.current_blog.create_post(post_title, post_text)
 
     def retrieve_posts(self, search_term):
-        ''' user retrieves the posts from the current blog that satisfy a search_term '''
+        ''' Retrieves posts from current blog that match search term in title or content.
+        User must be logged in and have a blog selected.'''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to retrieve posts")
             
@@ -210,7 +240,8 @@ class Controller():
         return self.current_blog.retrieve_posts(search_term)
 
     def update_post(self, post_code, new_post_title, new_post_text):
-        ''' user updates a post from the current blog '''
+        '''   Updates title and content of an existing post in the current blog.
+        User must be logged in and have a blog selected. '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to update posts")
             
@@ -220,7 +251,8 @@ class Controller():
         return self.current_blog.update_post(post_code, new_post_title, new_post_text)
 
     def delete_post(self, post_code):
-        ''' user deletes a post from the current blog '''
+        ''' Deletes a post from the current blog.
+        User must be logged in and have a blog selected. '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to delete posts")
             
@@ -230,7 +262,8 @@ class Controller():
         return self.current_blog.delete_post(post_code)
 
     def list_posts(self):
-        ''' user lists all posts from the current blog '''
+        ''' Lists all posts from the current blog in reverse chronological order.
+        User must be logged in and have a blog selected. '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to list posts")
             
