@@ -263,7 +263,7 @@ class Controller():
 
     def list_posts(self):
         ''' Lists all posts from the current blog in reverse chronological order.
-        User must be logged in and have a blog selected. '''
+        User must be logged in and have a blog selected . '''
         if not self.logged:
             raise IllegalAccessException("User must be logged in to list posts")
             

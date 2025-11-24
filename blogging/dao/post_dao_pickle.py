@@ -118,5 +118,5 @@ class PostDAOPickle(PostDAO):
 
     def list_posts(self):
         ''' Return all posts in reverse chronological order (most recent first).
-        Uses creation time for ordering - newer posts appear first. '''
+        Uses creation time for ordering - newer posts appear first . '''
         return list(reversed(self.posts))

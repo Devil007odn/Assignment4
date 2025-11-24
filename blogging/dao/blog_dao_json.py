@@ -73,7 +73,7 @@ class BlogDAOJSON(BlogDAO):
         return self.blogs.get(blog_id)
 
     def create_blog(self, blog):
-        ''' Create a new blog in the collection.
+        ''' Create a new blog in the collection .
         Returns False if blog with same ID already exists, True on success.
         Automatically saves to file if autosave is enabled. '''
         if blog.id in self.blogs:
